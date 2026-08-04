@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Processos - Dr. Emerson Luz</title>
+    <style>
+        :root {
+            --bg-dark: #0d0d0d;
+            --card-bg: #161616;
+            --gold-primary: #d4af37;
+            --gold-hover: #f3e5ab;
+            --text-light: #f5f5f5;
+            --border-color: #333333;
+            --green-pay: #2e7d32;
+            --red-pending: #c62828;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 2px solid var(--gold-primary);
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            max-width: 120px;
+            height: auto;
+            display: block;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--gold-primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        /* CARD COMPACTO DE CONSULTA */
+        .card-compact {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .search-container h2 {
+            margin-bottom: 0;
+            white-space: nowrap;
+            font-size: 1.05rem;
+        }
+
+        .search-box {
+            flex: 1;
+            margin-bottom: 0;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            border-color: var(--gold-primary);
+        }
+
+        /* LISTA SUSPENSA DE RESULTADOS DA BUSCA */
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #1a1a1a;
+            border: 1px solid var(--gold-primary);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid #2a2a2a;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover {
+            background-color: #2a2510;
+        }
+
+        .search-result-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .search-result-title {
+            font-weight: bold;
+            color: var(--gold-primary);
+            font-size: 0.9rem;
+        }
+
+        .search-result-sub {
+            font-size: 0.75rem;
+            color: #aaa;
+        }
+
+        .search-result-action {
+            font-size: 0.75rem;
+            color: var(--gold-hover);
+            border: 1px solid var(--gold-primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        h2 {
+            color: var(--gold-primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Form Layout Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--gold-primary);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            padding: 10px;
+            background-color: #222222;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8) sepia(100%) saturate(500%) hue-rotate(5deg);
+            cursor: pointer;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+        }
+
+        .parcelas-box {
+            background-color: #111;
+            border: 1px dashed var(--gold-primary);
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 5px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .parcelas-box ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
+        }
+
+        .parcelas-box li {
+            background: #222;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border-left: 3px solid var(--gold-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-gold {
+            background-color: var(--gold-primary);
+            color: #000;
+        }
+
+        .btn-gold:hover {
+            background-color: var(--gold-hover);
+        }
+
+        .btn-danger {
+            background-color: #7a1515;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background-color: #a81c1c;
+        }
+
+        .btn-secondary {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #444;
+        }
+
+        /* Botões de status de pagamento */
+        .status-btn {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-pago {
+            background-color: var(--green-pay);
+            color: #fff;
+        }
+
+        .status-pendente {
+            background-color: var(--red-pending);
+            color: #fff;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: var(--card-bg);
+            min-width: 800px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #202020;
+            color: var(--gold-primary);
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
+            background-color: #191919;
+        }
+
+        .actions-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .actions-cell button {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background-color: #333;
+            color: var(--gold-primary);
+            border: 1px solid var(--gold-primary);
+        }
+
+        .badge-intercalada {
+            color: #57b0ff;
+            border-color: #57b0ff;
+        }
+
+        .parcelas-list-table {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .parcelas-list-table li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #282828;
+            gap: 10px;
+        }
+
+        /* REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            header {
+                justify-content: center;
+                padding: 10px;
+                margin-bottom: 15px;
+            }
+
+            .card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            h2 {
+                font-size: 1.1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .parcelas-box ul {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn-group button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img src="image_aed7e5-removebg-preview.png" alt="Dr. Emerson Luz - Advocacia e Consultoria">
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- CONSULTA DA TABELA (COMPACTA E COM AUTOCOMPLETE) -->
+        <div class="card card-compact">
+            <div class="search-container">
+                <h2>Consultar Processos</h2>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="🔍 Pesquisar por Cliente, Processo, Status ou Data..." oninput="filterRecords()" autocomplete="off">
+                    <div id="search-dropdown" class="search-results-dropdown"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORMULÁRIO DE CADASTRO E EDIÇÃO -->
+        <div class="card">
+            <h2 id="form-title">Inserir Novo Registro</h2>
+            <form id="client-form">
+                <input type="hidden" id="record-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="cliente">Cliente</label>
+                        <input type="text" id="cliente" required placeholder="Nome do cliente">
+                    </div>
+                    <div class="form-group">
+                        <label for="processo">Processo / Serviço</label>
+                        <input type="text" id="processo" required placeholder="Ex: APOSENTADORIA POR TEMPO...">
+                    </div>
+                    <div class="form-group">
+                        <label for="valor">Valor Total/Descrição</label>
+                        <input type="text" id="valor" required placeholder="Ex: 30% do retroativo...">
+                    </div>
+                    
+                    <!-- ENTRADA -->
+                    <div class="form-group">
+                        <label for="valorEntrada">Valor da Entrada</label>
+                        <input type="text" id="valorEntrada" placeholder="Ex: R$ 500,00 ou Sem Entrada">
+                    </div>
+                    <div class="form-group">
+                        <label for="entradaPaga">Status da Entrada</label>
+                        <select id="entradaPaga">
+                            <option value="false">Pendente</option>
+                            <option value="true">Pago</option>
+                        </select>
+                    </div>
+
+                    <!-- VENCIMENTO E TIPO DE PARCELA -->
+                    <div class="form-group">
+                        <label for="vencimento">Vencimento (1ª Parcela)</label>
+                        <input type="date" id="vencimento" required onchange="calcularParcelas()">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipoParcela">Parcela Fixa/Intercalado</label>
+                        <select id="tipoParcela" required onchange="calcularParcelas()">
+                            <option value="fixa">Parcela fixa</option>
+                            <option value="intercalada">Parcela Intercalada</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalParcelas">Total de Parcelas</label>
+                        <input type="number" id="totalParcelas" min="1" max="120" value="1" required oninput="calcularParcelas()">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="honorarios">Honorários</label>
+                        <input type="text" id="honorarios" placeholder="Ex: R$ 1.162,20 + 4 parcelas">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label for="status">Status Geral (Calculado Automático)</label>
+                        <input type="text" id="status" readonly placeholder="Gerado automaticamente com base nos pagamentos..." style="background-color: #1a1a1a; color: var(--gold-hover); cursor: not-allowed;">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="observacao">Observação Manual</label>
+                        <textarea id="observacao" rows="2" placeholder="Ex: Cliente solicitou alteração na data de vencimento..."></textarea>
+                    </div>
+
+                    <!-- CAMPO DE GESTÃO AUTOMÁTICA DE PARCELAS -->
+                    <div class="form-group full-width">
+                        <label>Parcelas (Cálculo Automático de Datas e Pagamentos)</label>
+                        <div class="parcelas-box" id="parcelas-preview">
+                            <em>Selecione o Vencimento e o Total de Parcelas para gerar o cronograma.</em>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn-gold" id="btn-save">Salvar Registro</button>
+                    <button type="button" class="btn-secondary" id="btn-clear" onclick="resetForm()">Limpar</button>
+                    <button type="button" class="btn-secondary" id="btn-cancel" onclick="resetForm()" style="display:none;">Cancelar Edição</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- TABELA DINÂMICA DE DADOS -->
+        <div class="card">
+            <h2>Lista de Registros</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Processo / Serviço</th>
+                            <th>Entrada</th>
+                            <th>1º Vencimento / Tipo</th>
+                            <th>Gestão de Parcelas (Clique para alterar Pago/Pendente)</th>
+                            <th>Honorários</th>
+                            <th>Resumo Pagamentos</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Conteúdo preenchido dinamicamente via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="dados.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
