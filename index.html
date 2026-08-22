@@ -4,16 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciamento de Processos - Dr. Emerson Luz</title>
+    <!-- Biblioteca para Exportação em Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg-dark: #0d0d0d;
-            --card-bg: #161616;
+            --bg-dark: #1a1a1a; 
+            --card-bg: #262626; 
             --gold-primary: #d4af37;
             --gold-hover: #f3e5ab;
             --text-light: #f5f5f5;
-            --border-color: #333333;
+            --border-color: #444444; 
             --green-pay: #2e7d32;
             --red-pending: #c62828;
+            --btn-red-dark: #7a1515;
+            --btn-red-dark-hover: #a81c1c;
         }
 
         * {
@@ -26,16 +30,27 @@
         body {
             background-color: var(--bg-dark);
             color: var(--text-light);
-            padding: 20px;
+            padding: 0 20px 20px 20px;
         }
 
         header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-dark);
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 15px 20px;
             border-bottom: 2px solid var(--gold-primary);
             margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .logo-container img {
@@ -55,10 +70,9 @@
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 25px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
         }
 
-        /* CARD COMPACTO DE CONSULTA */
         .card-compact {
             padding: 10px 15px;
             margin-bottom: 15px;
@@ -88,66 +102,46 @@
             font-size: 0.85rem;
             padding: 8px 12px;
             border-color: var(--gold-primary);
+            background-color: #333333;
         }
 
-        /* LISTA SUSPENSA DE RESULTADOS DA BUSCA */
         .search-results-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background-color: #1a1a1a;
+            background-color: #333333;
             border: 1px solid var(--gold-primary);
             border-top: none;
             border-radius: 0 0 6px 6px;
             max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
             display: none;
         }
 
-        .search-result-item {
+        .search-item {
             padding: 10px 12px;
-            border-bottom: 1px solid #2a2a2a;
+            border-bottom: 1px solid #444444;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             transition: background-color 0.2s;
         }
 
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
-
-        .search-result-item:hover {
-            background-color: #2a2510;
-        }
-
-        .search-result-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .search-result-title {
-            font-weight: bold;
-            color: var(--gold-primary);
-            font-size: 0.9rem;
-        }
-
-        .search-result-sub {
-            font-size: 0.75rem;
-            color: #aaa;
-        }
-
-        .search-result-action {
-            font-size: 0.75rem;
+        .search-item:hover {
+            background-color: #444444;
             color: var(--gold-hover);
-            border: 1px solid var(--gold-primary);
-            padding: 2px 8px;
-            border-radius: 4px;
+        }
+
+        .search-item-title {
+            font-weight: bold;
+            font-size: 0.88rem;
+            color: var(--gold-primary);
+        }
+
+        .search-item-sub {
+            font-size: 0.78rem;
+            color: #ccc;
         }
 
         h2 {
@@ -158,7 +152,6 @@
             letter-spacing: 1px;
         }
 
-        /* Form Layout Grid */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -168,6 +161,10 @@
         .form-group {
             display: flex;
             flex-direction: column;
+        }
+
+        .form-group.double-width {
+            grid-column: span 2;
         }
 
         .form-group.full-width {
@@ -183,11 +180,20 @@
 
         input, select, textarea {
             padding: 10px;
-            background-color: #222222;
+            background-color: #333333;
             border: 1px solid var(--border-color);
             color: #fff;
             border-radius: 4px;
             width: 100%;
+        }
+
+        .highlight-input {
+            background-color: #2b2718 !important;
+            color: var(--gold-hover) !important;
+            border: 1.5px solid var(--gold-primary) !important;
+            font-weight: bold;
+            font-size: 0.88rem;
+            padding: 10px 8px;
         }
 
         input[type="date"]::-webkit-calendar-picker-indicator {
@@ -201,7 +207,7 @@
         }
 
         .parcelas-box {
-            background-color: #111;
+            background-color: #262626;
             border: 1px dashed var(--gold-primary);
             border-radius: 4px;
             padding: 12px;
@@ -209,24 +215,7 @@
             max-height: 180px;
             overflow-y: auto;
             font-size: 0.85rem;
-            color: #ccc;
-        }
-
-        .parcelas-box ul {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 8px;
-        }
-
-        .parcelas-box li {
-            background: #222;
-            padding: 6px 10px;
-            border-radius: 4px;
-            border-left: 3px solid var(--gold-primary);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            color: #fff;
         }
 
         .btn-group {
@@ -254,44 +243,64 @@
             background-color: var(--gold-hover);
         }
 
-        .btn-danger {
-            background-color: #7a1515;
-            color: #fff;
-        }
-
-        .btn-danger:hover {
-            background-color: #a81c1c;
-        }
-
         .btn-secondary {
-            background-color: #333;
+            background-color: #444444;
             color: #fff;
         }
 
         .btn-secondary:hover {
-            background-color: #444;
+            background-color: #555555;
         }
 
-        /* Botões de status de pagamento */
+        .actions-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 80px;
+        }
+
+        .actions-cell button {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            width: 100%;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .btn-action-edit {
+            background-color: #d4af37;
+            color: #000;
+            border: none;
+        }
+
+        .btn-action-edit:hover {
+            background-color: #f3e5ab;
+        }
+
+        .btn-action-delete {
+            background-color: #7a1515;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-action-delete:hover {
+            background-color: #a81c1c;
+        }
+
         .status-btn {
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             cursor: pointer;
             border: none;
             font-weight: bold;
             display: inline-block;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .status-pago {
-            background-color: var(--green-pay);
-            color: #fff;
-        }
-
-        .status-pendente {
-            background-color: var(--red-pending);
-            color: #fff;
-        }
+        .status-pago { background-color: var(--green-pay); color: #fff; }
+        .status-pendente { background-color: var(--red-pending); color: #fff; }
 
         .table-responsive {
             overflow-x: auto;
@@ -311,104 +320,248 @@
             padding: 12px;
             text-align: left;
             font-size: 0.85rem;
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         th {
-            background-color: #202020;
+            background-color: #333333;
             color: var(--gold-primary);
             text-transform: uppercase;
         }
 
-        tr:nth-child(even) {
-            background-color: #191919;
-        }
-
-        .actions-cell {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .actions-cell button {
-            padding: 6px 10px;
-            font-size: 0.8rem;
-            width: 100%;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            background-color: #333;
-            color: var(--gold-primary);
+        th.th-interactive {
+            background-color: #3a3520;
             border: 1px solid var(--gold-primary);
+            min-width: 220px;
         }
 
-        .badge-intercalada {
-            color: #57b0ff;
-            border-color: #57b0ff;
+        tr:nth-child(even) {
+            background-color: #2b2b2b;
         }
 
         .parcelas-list-table {
             list-style: none;
             padding: 0;
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .parcelas-list-table li {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 4px;
-            padding-bottom: 3px;
-            border-bottom: 1px solid #282828;
-            gap: 10px;
+            padding: 6px 8px;
+            border-bottom: 1px dashed #3d3d3d;
+            gap: 12px;
+            background-color: #1e1e1e;
+            border-radius: 4px;
         }
 
-        /* REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) */
+        .parcela-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .filter-section-title {
+            color: var(--gold-primary);
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            border-bottom: 1px dashed var(--gold-primary);
+            padding-bottom: 4px;
+            grid-column: 1 / -1;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background-color: #333333;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .summary-card h3 {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .summary-card .value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--gold-hover);
+        }
+
+        .summary-card.green .value { color: #81c784; }
+        .summary-card.red .value { color: #e57373; }
+
+        .obs-text-small {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 4px;
+            display: block;
+        }
+
         @media (max-width: 768px) {
+            body { padding: 0 10px 10px 10px; }
+            header { flex-direction: column; gap: 10px; padding: 10px; }
+            .header-left { width: 100%; justify-content: space-between; }
+            .card { padding: 15px; margin-bottom: 15px; }
+            .search-container { flex-direction: column; align-items: stretch; gap: 8px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
+            .btn-group button { width: 100%; }
+        }
+
+        /* CONFIGURAÇÃO EXCLUSIVA PARA IMPRESSÃO / PDF */
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        @media print {
             body {
-                padding: 10px;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
-            header {
-                justify-content: center;
-                padding: 10px;
-                margin-bottom: 15px;
+            header, .header-left, .no-print, #main-view, details, .btn-group, footer, div[style*="text-align: center"] {
+                display: none !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
             .card {
-                padding: 15px;
-                margin-bottom: 15px;
-            }
-
-            .search-container {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 8px;
+                background-color: #ffffff !important;
+                border: none !important;
+                box-shadow: none !important;
+                color: #000000 !important;
+                padding: 0 !important;
+                margin-bottom: 10px !important;
             }
 
             h2 {
-                font-size: 1.1rem;
+                color: #b8860b !important;
+                font-size: 1.1rem !important;
+                margin-bottom: 10px !important;
             }
 
-            .form-grid {
-                grid-template-columns: 1fr;
+            .summary-cards {
+                display: flex !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+                margin-bottom: 15px !important;
             }
 
-            .parcelas-box ul {
-                grid-template-columns: 1fr;
+            .summary-card {
+                background-color: #f8f9fa !important;
+                border: 1px solid #ccc !important;
+                border-radius: 4px !important;
+                padding: 8px !important;
+                flex: 1;
             }
 
-            .btn-group {
-                flex-direction: column;
+            .summary-card h3 {
+                color: #333333 !important;
+                font-size: 0.75rem !important;
+                margin-bottom: 4px !important;
             }
 
-            .btn-group button {
-                width: 100%;
+            .summary-card .value {
+                font-size: 1.1rem !important;
+                color: #b8860b !important;
+            }
+
+            .summary-card.green .value { color: #2e7d32 !important; }
+            .summary-card.red .value { color: #c62828 !important; }
+
+            .table-responsive {
+                overflow: visible !important;
+            }
+
+            table {
+                background-color: #ffffff !important;
+                border-collapse: collapse !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                table-layout: fixed !important;
+            }
+
+            th, td {
+                border: 1px solid #777777 !important;
+                color: #000000 !important;
+                padding: 4px 3px !important;
+                font-size: 0.68rem !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                text-align: center !important;
+            }
+
+            th {
+                background-color: #f0f0f0 !important;
+                color: #000000 !important;
+                font-weight: bold !important;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f9f9f9 !important;
+            }
+
+            th:nth-child(1), td:nth-child(1) { width: 11%; text-align: left !important; }
+            th:nth-child(2), td:nth-child(2) { width: 10%; text-align: left !important; }
+            th:nth-child(3), td:nth-child(3) { width: 8%; }
+            th:nth-child(4), td:nth-child(4) { width: 5%; }
+            th:nth-child(5), td:nth-child(5) { width: 8%; }
+            th:nth-child(6), td:nth-child(6) { width: 7%; }
+            th:nth-child(7), td:nth-child(7) { width: 7%; }
+            th:nth-child(8), td:nth-child(8) { width: 7%; }
+            th:nth-child(9), td:nth-child(9) { width: 6%; }
+            th:nth-child(10), td:nth-child(10) { width: 5%; }
+            th:nth-child(11), td:nth-child(11) { width: 13%; }
+            th:nth-child(12), td:nth-child(12) { width: 6%; }
+            th:nth-child(13), td:nth-child(13) { width: 7%; }
+
+            .status-btn {
+                border: none !important;
+                color: #ffffff !important;
+                padding: 2px 6px !important;
+                font-size: 0.65rem !important;
+                border-radius: 4px !important;
+            }
+
+            .status-pago {
+                background-color: #2e7d32 !important;
+            }
+
+            .status-pendente {
+                background-color: #c62828 !important;
+            }
+
+            .obs-text-small {
+                color: #555555 !important;
             }
         }
     </style>
@@ -416,6 +569,9 @@
 <body>
 
     <header>
+        <div class="header-left">
+            <button type="button" class="btn-gold" id="btn-toggle-view" onclick="toggleView()">📊 Relatórios</button>
+        </div>
         <div class="logo-container">
             <img src="image_aed7e5-removebg-preview.png" alt="Dr. Emerson Luz - Advocacia e Consultoria">
         </div>
@@ -423,126 +579,616 @@
 
     <div class="container">
         
-        <!-- CONSULTA DA TABELA (COMPACTA E COM AUTOCOMPLETE) -->
-        <div class="card card-compact">
-            <div class="search-container">
-                <h2>Consultar Processos</h2>
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="🔍 Pesquisar por Cliente, Processo, Status ou Data..." oninput="filterRecords()" autocomplete="off">
-                    <div id="search-dropdown" class="search-results-dropdown"></div>
+        <div id="main-view">
+            <div class="card card-compact">
+                <div class="search-container">
+                    <h2>Consultar Processos</h2>
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="🔍 Pesquisar por Cliente, Processo, Status ou Data..." oninput="filterRecords()" autocomplete="off">
+                        <div id="search-dropdown" class="search-results-dropdown"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 id="form-title">Inserir Novo Registro</h2>
+                <form id="client-form">
+                    <input type="hidden" id="record-id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cliente">Cliente</label>
+                            <input type="text" id="cliente" required placeholder="Nome do cliente">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="processo">Processo / Serviço</label>
+                            <select id="processo" required>
+                                <option value="" disabled selected>Selecione o serviço...</option>
+                                <option value="BPC LOAS DEFICIENTE">BPC LOAS DEFICIENTE</option>
+                                <option value="BPC LOAS IDOSO">BPC LOAS IDOSO</option>
+                                <option value="APOSENTADORIA">APOSENTADORIA</option>
+                                <option value="PENSÃO POR MORTE">PENSÃO POR MORTE</option>
+                                <option value="AUXÍLIO DOENÇA">AUXÍLIO DOENÇA</option>
+                                <option value="APOSENTADORIA POR INVALIDEZ">APOSENTADORIA POR INVALIDEZ</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="valor">Valor de Processo</label>
+                            <input type="text" id="valor" required placeholder="R$ 0,00" oninput="formatarMoedaInput(this); calcularCalculosGerais();">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="percHonorarios">% Honorários/Entrada</label>
+                            <input type="number" id="percHonorarios" step="0.01" min="0" max="100" placeholder="Ex: 30" oninput="calcularCalculosGerais();">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="valorEntrada">R$ Honorários/Entrada</label>
+                            <input type="text" id="valorEntrada" readonly placeholder="R$ 0,00" style="background-color: #333333; cursor: not-allowed;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="entradaPaga">Status da Entrada</label>
+                            <select id="entradaPaga">
+                                <option value="false">Pendente</option>
+                                <option value="true">Pago</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="valorParcela">Valor da Parcela</label>
+                            <input type="text" id="valorParcela" placeholder="R$ 0,00" oninput="formatarMoedaInput(this); calcularCalculosGerais();">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vencimento">Vencimento (1ª Parcela)</label>
+                            <input type="date" id="vencimento" required onchange="calcularParcelas()">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tipoParcela">Parcela Fixa/Intercalado</label>
+                            <select id="tipoParcela" required onchange="calcularParcelas(); calcularCalculosGerais();">
+                                <option value="fixa">Parcela fixa</option>
+                                <option value="intercalada">Parcela Intercalada</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="totalParcelas">Total de Parcelas</label>
+                            <input type="number" id="totalParcelas" min="1" max="120" value="1" required oninput="calcularParcelas(); calcularCalculosGerais();">
+                        </div>
+
+                        <div class="form-group double-width">
+                            <label for="honorarios">Honorários (Gerado Automático)</label>
+                            <input type="text" id="honorarios" class="highlight-input" readonly placeholder="Aguardando dados..." style="cursor: not-allowed;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vencimentoEntrada">Vencimento Honorários/Entrada</label>
+                            <input type="date" id="vencimentoEntrada">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="status">Status Geral (Calculado Automático)</label>
+                            <input type="text" id="status" readonly placeholder="Gerado automaticamente com base nos pagamentos..." style="background-color: #333333; color: var(--gold-hover); cursor: not-allowed;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="observacao">Observação Manual</label>
+                            <textarea id="observacao" rows="2" placeholder="Ex: Cliente solicitou alteração na data de vencimento..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Parcelas (Cálculo Automático de Datas e Pagamentos)</label>
+                            <div class="parcelas-box" id="parcelas-preview">
+                                <em>Selecione o Vencimento e o Total de Parcelas para gerar o cronograma.</em>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn-gold" id="btn-save">Salvar Registro</button>
+                        <button type="button" class="btn-secondary" id="btn-clear" onclick="resetForm()">Limpar</button>
+                        <button type="button" class="btn-secondary" id="btn-cancel" onclick="resetForm()" style="display:none;">Cancelar Edição</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Lista de Registros</h2>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Processo / Serviço</th>
+                                <th>Entrada / Vencimento</th>
+                                <th>1º Vencimento / Tipo</th>
+                                <th class="th-interactive">👆 Gestão de Parcelas <span style="font-size: 0.7rem; font-weight: normal; opacity: 0.9; display: block; margin-top: 2px;">(Clique no status para alterar Pago/Pendente)</span></th>
+                                <th>Honorários</th>
+                                <th>Resumo Pagamentos</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- FORMULÁRIO DE CADASTRO E EDIÇÃO -->
-        <div class="card">
-            <h2 id="form-title">Inserir Novo Registro</h2>
-            <form id="client-form">
-                <input type="hidden" id="record-id">
-                <div class="form-grid">
+        <div id="reports-view" style="display: none;">
+            <details class="card" id="details-filtros">
+                <summary style="cursor: pointer; outline: none;">
+                    <h2 style="display: inline-block; margin-bottom: 0;">Filtros Dinâmicos de Relatório</h2>
+                </summary>
+                <div class="form-grid" style="margin-top: 15px;">
+                    <div class="filter-section-title">🔍 Dados do Cadastro</div>
                     <div class="form-group">
-                        <label for="cliente">Cliente</label>
-                        <input type="text" id="cliente" required placeholder="Nome do cliente">
+                        <label for="rep-cliente">Cliente</label>
+                        <input type="text" id="rep-cliente" placeholder="Nome do cliente...">
                     </div>
                     <div class="form-group">
-                        <label for="processo">Processo / Serviço</label>
-                        <input type="text" id="processo" required placeholder="Ex: APOSENTADORIA POR TEMPO...">
-                    </div>
-                    <div class="form-group">
-                        <label for="valor">Valor Total/Descrição</label>
-                        <input type="text" id="valor" required placeholder="Ex: 30% do retroativo...">
-                    </div>
-                    
-                    <!-- ENTRADA -->
-                    <div class="form-group">
-                        <label for="valorEntrada">Valor da Entrada</label>
-                        <input type="text" id="valorEntrada" placeholder="Ex: R$ 500,00 ou Sem Entrada">
-                    </div>
-                    <div class="form-group">
-                        <label for="entradaPaga">Status da Entrada</label>
-                        <select id="entradaPaga">
-                            <option value="false">Pendente</option>
-                            <option value="true">Pago</option>
+                        <label for="rep-processo">Processo / Serviço</label>
+                        <select id="rep-processo">
+                            <option value="">Todos os Serviços</option>
+                            <option value="BPC LOAS DEFICIENTE">BPC LOAS DEFICIENTE</option>
+                            <option value="BPC LOAS IDOSO">BPC LOAS IDOSO</option>
+                            <option value="APOSENTADORIA">APOSENTADORIA</option>
+                            <option value="PENSÃO POR MORTE">PENSÃO POR MORTE</option>
+                            <option value="AUXÍLIO DOENÇA">AUXÍLIO DOENÇA</option>
+                            <option value="APOSENTADORIA POR INVALIDEZ">APOSENTADORIA POR INVALIDEZ</option>
                         </select>
                     </div>
 
-                    <!-- VENCIMENTO E TIPO DE PARCELA -->
+                    <div class="filter-section-title">📅 Filtro de Datas da Entrada</div>
                     <div class="form-group">
-                        <label for="vencimento">Vencimento (1ª Parcela)</label>
-                        <input type="date" id="vencimento" required onchange="calcularParcelas()">
+                        <label for="rep-entrada-inicio">Data Inicial (Entrada)</label>
+                        <input type="date" id="rep-entrada-inicio">
                     </div>
                     <div class="form-group">
-                        <label for="tipoParcela">Parcela Fixa/Intercalado</label>
-                        <select id="tipoParcela" required onchange="calcularParcelas()">
-                            <option value="fixa">Parcela fixa</option>
-                            <option value="intercalada">Parcela Intercalada</option>
+                        <label for="rep-entrada-fim">Data Final (Entrada)</label>
+                        <input type="date" id="rep-entrada-fim">
+                    </div>
+                    <div class="form-group">
+                        <label for="rep-entrada-atalho">Atalho Rápido (Entrada)</label>
+                        <select id="rep-entrada-atalho" onchange="aplicarAtalhoData('rep-entrada-inicio', 'rep-entrada-fim', this.value)">
+                            <option value="">Personalizado</option>
+                            <option value="semana">Última Semana</option>
+                            <option value="mes">Último Mês</option>
+                            <option value="ano">Último Ano</option>
                         </select>
                     </div>
 
+                    <div class="filter-section-title">📆 Filtro de Datas das Parcelas</div>
                     <div class="form-group">
-                        <label for="totalParcelas">Total de Parcelas</label>
-                        <input type="number" id="totalParcelas" min="1" max="120" value="1" required oninput="calcularParcelas()">
+                        <label for="rep-parcela-inicio">Data Inicial (Parcela)</label>
+                        <input type="date" id="rep-parcela-inicio">
                     </div>
-
                     <div class="form-group">
-                        <label for="honorarios">Honorários</label>
-                        <input type="text" id="honorarios" placeholder="Ex: R$ 1.162,20 + 4 parcelas">
+                        <label for="rep-parcela-fim">Data Final (Parcela)</label>
+                        <input type="date" id="rep-parcela-fim">
                     </div>
-                    
-                    <div class="form-group full-width">
-                        <label for="status">Status Geral (Calculado Automático)</label>
-                        <input type="text" id="status" readonly placeholder="Gerado automaticamente com base nos pagamentos..." style="background-color: #1a1a1a; color: var(--gold-hover); cursor: not-allowed;">
+                    <div class="form-group">
+                        <label for="rep-parcela-atalho">Atalho Rápido (Parcelas)</label>
+                        <select id="rep-parcela-atalho" onchange="aplicarAtalhoData('rep-parcela-inicio', 'rep-parcela-fim', this.value)">
+                            <option value="">Personalizado</option>
+                            <option value="semana">Última Semana</option>
+                            <option value="mes">Último Mês</option>
+                            <option value="ano">Último Ano</option>
+                        </select>
                     </div>
 
-                    <div class="form-group full-width">
-                        <label for="observacao">Observação Manual</label>
-                        <textarea id="observacao" rows="2" placeholder="Ex: Cliente solicitou alteração na data de vencimento..."></textarea>
+                    <div class="filter-section-title">⚙️ Tipo e Status</div>
+                    <div class="form-group">
+                        <label for="rep-tipo-lancamento">Tipo de Lançamento</label>
+                        <select id="rep-tipo-lancamento">
+                            <option value="todos">Todos (Entradas + Parcelas)</option>
+                            <option value="entrada">Apenas Entradas</option>
+                            <option value="parcela">Apenas Parcelas</option>
+                        </select>
                     </div>
-
-                    <!-- CAMPO DE GESTÃO AUTOMÁTICA DE PARCELAS -->
-                    <div class="form-group full-width">
-                        <label>Parcelas (Cálculo Automático de Datas e Pagamentos)</label>
-                        <div class="parcelas-box" id="parcelas-preview">
-                            <em>Selecione o Vencimento e o Total de Parcelas para gerar o cronograma.</em>
-                        </div>
+                    <div class="form-group">
+                        <label for="rep-status">Status de Pagamento</label>
+                        <select id="rep-status">
+                            <option value="todos">Todos os Status</option>
+                            <option value="pago">Apenas Pagos</option>
+                            <option value="pendente">Apenas Pendentes</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="btn-group">
-                    <button type="submit" class="btn-gold" id="btn-save">Salvar Registro</button>
-                    <button type="button" class="btn-secondary" id="btn-clear" onclick="resetForm()">Limpar</button>
-                    <button type="button" class="btn-secondary" id="btn-cancel" onclick="resetForm()" style="display:none;">Cancelar Edição</button>
+                    <button type="button" class="btn-gold" onclick="gerarRelatorio(true)">Aplicar Filtros</button>
+                    <button type="button" class="btn-secondary" onclick="limparFiltrosRelatorio()">Limpar Filtros</button>
                 </div>
-            </form>
-        </div>
+            </details>
 
-        <!-- TABELA DINÂMICA DE DADOS -->
-        <div class="card">
-            <h2>Lista de Registros</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Processo / Serviço</th>
-                            <th>Entrada</th>
-                            <th>1º Vencimento / Tipo</th>
-                            <th>Gestão de Parcelas (Clique para alterar Pago/Pendente)</th>
-                            <th>Honorários</th>
-                            <th>Resumo Pagamentos</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <!-- Conteúdo preenchido dinamicamente via JS -->
-                    </tbody>
-                </table>
+            <div class="btn-group no-print" style="margin-bottom: 20px;">
+                <button type="button" class="btn-gold" onclick="imprimirPDF()">🖨️ Imprimir PDF</button>
+                <button type="button" class="btn-gold" onclick="exportarExcel()">📊 Baixar Excel</button>
+            </div>
+
+            <div class="summary-cards">
+                <div class="summary-card green">
+                    <h3>Total Recebido (Ganhos)</h3>
+                    <div class="value" id="rep-total-recebido">R$ 0,00</div>
+                </div>
+                <div class="summary-card red">
+                    <h3>Total Pendente</h3>
+                    <div class="value" id="rep-total-pendente">R$ 0,00</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Total Geral do Período</h3>
+                    <div class="value" id="rep-total-geral">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Relatório Detalhado de Lançamentos</h2>
+                <div class="table-responsive">
+                    <table id="report-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Serviço</th>
+                                <th>Valor Processo</th>
+                                <th>% Entrada</th>
+                                <th>R$ Entrada</th>
+                                <th>Venc. Entrada</th>
+                                <th>R$ Parcela</th>
+                                <th>1º Venc. Parcela</th>
+                                <th>Tipo Parcela</th>
+                                <th>Total Parc.</th>
+                                <th>Honorários</th>
+                                <th>Status Geral</th>
+                                <th>Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
+        <div style="text-align: center; margin-top: 25px; margin-bottom: 10px; font-size: 11px; color: #666; font-weight: bold;">
+            &copy; Copyright 2026 | Desenvolvido Por WM SecureSystems - Williams Macedo (011 9.7346-7966)
+        </div>
     </div>
 
-    <script src="dados.js"></script>
+    <script>
+        function formatarMoedaInput(input) {
+            let value = input.value.replace(/\D/g, "");
+            if (!value) {
+                input.value = "";
+                return;
+            }
+            value = (parseFloat(value) / 100).toFixed(2);
+            input.value = "R$ " + value.replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        }
+
+        function parseMoedaFloat(valorString) {
+            if (!valorString) return 0;
+            let limpo = valorString.replace("R$", "").replace(/\./g, "").replace(",", ".").trim();
+            return parseFloat(limpo) || 0;
+        }
+
+        function formatarMoedaString(valorNumber) {
+            return "R$ " + valorNumber.toFixed(2).replace(".", ",").replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        }
+
+        /* 1. AJUSTE: GERAÇÃO DE HONORÁRIOS COM % + ENTRADA + PARCELAS */
+        function calcularCalculosGerais() {
+            const valorProcesso = parseMoedaFloat(document.getElementById('valor').value);
+            const perc = parseFloat(document.getElementById('percHonorarios').value) || 0;
+            
+            let rsEntrada = 0;
+            if (valorProcesso > 0 && perc > 0) {
+                rsEntrada = (valorProcesso * perc) / 100;
+                document.getElementById('valorEntrada').value = formatarMoedaString(rsEntrada);
+            } else {
+                document.getElementById('valorEntrada').value = "R$ 0,00";
+            }
+
+            const totalParcelas = document.getElementById('totalParcelas').value || "1";
+            const tipoParcelaSelect = document.getElementById('tipoParcela');
+            const tipoTexto = tipoParcelaSelect.options[tipoParcelaSelect.selectedIndex]?.text.toLowerCase() || "";
+
+            let textoHonorarios = `${formatarMoedaString(rsEntrada)} (${perc.toFixed(1)}%) + ${totalParcelas} parcelas (${tipoTexto})`;
+            document.getElementById('honorarios').value = textoHonorarios;
+        }
+
+        /* 2. AJUSTE: AUTOCOMPLETAR NA BUSCA */
+        function filterRecords() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const dropdown = document.getElementById('search-dropdown');
+
+            const listaRegistros = (typeof registros !== 'undefined' && Array.isArray(registros)) ? registros : (window.registros || []);
+
+            if (!query || listaRegistros.length === 0) {
+                dropdown.style.display = 'none';
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            const resultados = listaRegistros.filter(rec => {
+                const cliente = (rec.cliente || '').toLowerCase();
+                const processo = (rec.processo || '').toLowerCase();
+                const status = (rec.status || '').toLowerCase();
+                const obs = (rec.observacao || '').toLowerCase();
+                return cliente.includes(query) || processo.includes(query) || status.includes(query) || obs.includes(query);
+            });
+
+            if (resultados.length === 0) {
+                dropdown.innerHTML = '<div class="search-item"><span class="search-item-sub">Nenhum registro encontrado.</span></div>';
+            } else {
+                dropdown.innerHTML = resultados.map(rec => `
+                    <div class="search-item" onclick="selectRecordForEdit('${rec.id}')">
+                        <div class="search-item-title">${rec.cliente || 'Sem nome'}</div>
+                        <div class="search-item-sub">${rec.processo || '-'} | Status: ${rec.status || 'Pendente'} | Honorários: ${rec.honorarios || '-'}</div>
+                    </div>
+                `).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+
+        function selectRecordForEdit(id) {
+            document.getElementById('search-dropdown').style.display = 'none';
+            document.getElementById('search-input').value = '';
+
+            if (typeof editRecord === 'function') {
+                editRecord(id);
+            } else if (typeof window.editRecord === 'function') {
+                window.editRecord(id);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const searchBox = document.querySelector('.search-box');
+            if (searchBox && !searchBox.contains(e.target)) {
+                const dropdown = document.getElementById('search-dropdown');
+                if (dropdown) dropdown.style.display = 'none';
+            }
+        });
+
+        function toggleView() {
+            const mainView = document.getElementById('main-view');
+            const reportsView = document.getElementById('reports-view');
+            const btn = document.getElementById('btn-toggle-view');
+
+            if (mainView.style.display === 'none') {
+                mainView.style.display = 'block';
+                reportsView.style.display = 'none';
+                btn.textContent = '📊 Relatórios';
+            } else {
+                mainView.style.display = 'none';
+                reportsView.style.display = 'block';
+                btn.textContent = '🏠 Tela Principal';
+                gerarRelatorio(false);
+            }
+        }
+
+        function aplicarAtalhoData(idInicio, idFim, opcao) {
+            if (!opcao) return;
+            const hoje = new Date();
+            let inicio = new Date();
+
+            if (opcao === 'semana') inicio.setDate(hoje.getDate() - 7);
+            else if (opcao === 'mes') inicio.setMonth(hoje.getMonth() - 1);
+            else if (opcao === 'ano') inicio.setFullYear(hoje.getFullYear() - 1);
+
+            document.getElementById(idInicio).value = inicio.toISOString().split('T')[0];
+            document.getElementById(idFim).value = hoje.toISOString().split('T')[0];
+        }
+
+        /* 3. AJUSTE: RENDERIZAÇÃO DA TABELA NA TELA INICIAL INCLUINDO OBSERVAÇÃO ABAIXO DO STATUS NO RESUMO DE PAGAMENTOS */
+        function renderTable(dados) {
+            const tbody = document.getElementById('table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const lista = dados || (typeof registros !== 'undefined' ? registros : []);
+
+            lista.forEach(rec => {
+                const tr = document.createElement('tr');
+                const obsTextoHtml = rec.observacao ? `<span class="obs-text-small"><strong>Obs:</strong> ${rec.observacao}</span>` : '';
+
+                tr.innerHTML = `
+                    <td><strong>${rec.cliente || '-'}</strong></td>
+                    <td>${rec.processo || '-'}</td>
+                    <td>
+                        <div>${rec.valorEntrada || 'R$ 0,00'} (${rec.entradaPaga ? 'Pago' : 'Pendente'})</div>
+                        <div style="font-size: 0.75rem; color: #aaa;">Venc: ${rec.vencimentoEntrada ? new Date(rec.vencimentoEntrada + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</div>
+                    </td>
+                    <td>
+                        <div>1º Venc: ${rec.vencimento ? new Date(rec.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</div>
+                        <div style="font-size: 0.75rem; color: #aaa;">Tipo: ${rec.tipoParcela || '-'}</div>
+                    </td>
+                    <td>
+                        <!-- Preenchido dinamicamente pelo app.js se houver renderização de parcelas -->
+                        <div id="parcelas-cell-${rec.id}">-</div>
+                    </td>
+                    <td>${rec.honorarios || '-'}</td>
+                    <td>
+                        <span class="status-btn ${rec.status === 'Pago' ? 'status-pago' : 'status-pendente'}">${rec.status || 'Pendente'}</span>
+                        ${obsTextoHtml}
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            <button type="button" class="btn-action-edit" onclick="editRecord('${rec.id}')">Editar</button>
+                            <button type="button" class="btn-action-delete" onclick="deleteRecord('${rec.id}')">Excluir</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function gerarRelatorio(comFiltro = false) {
+            if (comFiltro) {
+                const details = document.getElementById('details-filtros');
+                if (details) details.removeAttribute('open');
+            }
+
+            const listaRegistros = (typeof registros !== 'undefined' && Array.isArray(registros)) ? registros : (window.registros || []);
+            if (listaRegistros.length === 0) return;
+
+            const filtroCliente = comFiltro ? document.getElementById('rep-cliente').value.toLowerCase().trim() : '';
+            const filtroProcesso = comFiltro ? document.getElementById('rep-processo').value : '';
+            const entInicio = comFiltro ? document.getElementById('rep-entrada-inicio').value : '';
+            const entFim = comFiltro ? document.getElementById('rep-entrada-fim').value : '';
+            const parcInicio = comFiltro ? document.getElementById('rep-parcela-inicio').value : '';
+            const parcFim = comFiltro ? document.getElementById('rep-parcela-fim').value : '';
+            const tipoLancamento = comFiltro ? document.getElementById('rep-tipo-lancamento').value : 'todos';
+            const statusFiltro = comFiltro ? document.getElementById('rep-status').value : 'todos';
+
+            let totalRecebido = 0;
+            let totalPendente = 0;
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+
+            const fragment = document.createDocumentFragment();
+
+            listaRegistros.forEach(rec => {
+                if (comFiltro) {
+                    if (filtroCliente && !(rec.cliente || '').toLowerCase().includes(filtroCliente)) return;
+                    if (filtroProcesso && rec.processo !== filtroProcesso) return;
+                }
+
+                let incluirRegistro = false;
+
+                if (tipoLancamento === 'todos' || tipoLancamento === 'entrada') {
+                    const stEntrada = rec.entradaPaga ? 'pago' : 'pendente';
+                    const dtEntrada = rec.vencimentoEntrada || '';
+                    
+                    let atendeData = true;
+                    if (entInicio && dtEntrada < entInicio) atendeData = false;
+                    if (entFim && dtEntrada > entFim) atendeData = false;
+
+                    let atendeStatus = (statusFiltro === 'todos' || statusFiltro === stEntrada);
+
+                    if (atendeData && atendeStatus) {
+                        const val = parseMoedaFloat(rec.valorEntrada);
+                        if (rec.entradaPaga) totalRecebido += val;
+                        else totalPendente += val;
+                        incluirRegistro = true;
+                    }
+                }
+
+                if (tipoLancamento === 'todos' || tipoLancamento === 'parcela') {
+                    if (rec.parcelas && rec.parcelas.length > 0) {
+                        const valParc = parseMoedaFloat(rec.valorParcela);
+                        rec.parcelas.forEach(p => {
+                            const stParc = p.pago ? 'pago' : 'pendente';
+                            const dtParc = p.vencimento || '';
+
+                            let atendeData = true;
+                            if (parcInicio && dtParc < parcInicio) atendeData = false;
+                            if (parcFim && dtParc > parcFim) atendeData = false;
+
+                            let atendeStatus = (statusFiltro === 'todos' || statusFiltro === stParc);
+
+                            if (atendeData && atendeStatus) {
+                                if (p.pago) totalRecebido += valParc;
+                                else totalPendente += valParc;
+                                incluirRegistro = true;
+                            }
+                        });
+                    }
+                }
+
+                if (incluirRegistro || !comFiltro) {
+                    const tr = document.createElement('tr');
+                    
+                    tr.innerHTML = `
+                        <td><strong>${rec.cliente || '-'}</strong></td>
+                        <td>${rec.processo || '-'}</td>
+                        <td>${rec.valor || 'R$ 0,00'}</td>
+                        <td>${rec.percHonorarios ? rec.percHonorarios + '%' : '0%'}</td>
+                        <td>${rec.valorEntrada || 'R$ 0,00'}</td>
+                        <td>${rec.vencimentoEntrada ? new Date(rec.vencimentoEntrada + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</td>
+                        <td>${rec.valorParcela || 'R$ 0,00'}</td>
+                        <td>${rec.vencimento ? new Date(rec.vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</td>
+                        <td>${rec.tipoParcela || '-'}</td>
+                        <td>${rec.totalParcelas || '1'}</td>
+                        <td>${rec.honorarios || '-'}</td>
+                        <td>
+                            <span class="status-btn ${rec.status === 'Pago' ? 'status-pago' : 'status-pendente'}">${rec.status || 'Pendente'}</span>
+                        </td>
+                        <td>${rec.observacao || '-'}</td>
+                    `;
+                    fragment.appendChild(tr);
+                }
+            });
+
+            tbody.appendChild(fragment);
+
+            document.getElementById('rep-total-recebido').textContent = formatarMoedaString(totalRecebido);
+            document.getElementById('rep-total-pendente').textContent = formatarMoedaString(totalPendente);
+            document.getElementById('rep-total-geral').textContent = formatarMoedaString(totalRecebido + totalPendente);
+        }
+
+        function limparFiltrosRelatorio() {
+            document.getElementById('rep-cliente').value = '';
+            document.getElementById('rep-processo').value = '';
+            document.getElementById('rep-entrada-inicio').value = '';
+            document.getElementById('rep-entrada-fim').value = '';
+            document.getElementById('rep-entrada-atalho').value = '';
+            document.getElementById('rep-parcela-inicio').value = '';
+            document.getElementById('rep-parcela-fim').value = '';
+            document.getElementById('rep-parcela-atalho').value = '';
+            document.getElementById('rep-tipo-lancamento').value = 'todos';
+            document.getElementById('rep-status').value = 'todos';
+            
+            const details = document.getElementById('details-filtros');
+            if (details) details.removeAttribute('open');
+
+            gerarRelatorio(false);
+        }
+
+        function imprimirPDF() {
+            window.print();
+        }
+
+        function exportarExcel() {
+            const table = document.getElementById('report-table');
+            if (!table) return;
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.table_to_sheet(table);
+
+            XLSX.utils.book_append_sheet(wb, ws, "Relatorio_Processos");
+            XLSX.writeFile(wb, `Relatorio_Processos_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+    </script>
+
+    <!-- SDKs do Firebase -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { 
+        getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot 
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAvwH8klQeYXNA_elzSZ9qn14Nd9PA2c9g",
+        authDomain: "emerson-luz-advocacia.firebaseapp.com",
+        projectId: "emerson-luz-advocacia",
+        storageBucket: "emerson-luz-advocacia.firebasestorage.app",
+        messagingSenderId: "135194533779",
+        appId: "1:135194533779:web:8be329a5a8ec5ad04fd266",
+        measurementId: "G-862KF0LYMY"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      window.db = db;
+      window.fs = { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot };
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
